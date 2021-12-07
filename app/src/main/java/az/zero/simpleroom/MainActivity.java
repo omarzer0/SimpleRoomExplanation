@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     public static final String DATABASE_NAME = "user_db";
@@ -27,29 +28,36 @@ public class MainActivity extends AppCompatActivity {
 
         UserDatabase database = Room.databaseBuilder(getApplicationContext(),
                 UserDatabase.class, DATABASE_NAME)
-                .allowMainThreadQueries()
+//                .allowMainThreadQueries()
                 .build();
 
 
         buttonAdd.setOnClickListener(v -> {
             User user = new User("abdo\t", "khaled");
-            database.userDao().insertUser(user);
+            Executors.newSingleThreadExecutor().execute(() -> {
+                database.userDao().insertUser(user);
+            });
         });
 
 
         buttonDelete.setOnClickListener(v -> {
-            database.userDao().deleteUser(new User(2, "abdo", "khaled"));
+            Executors.newSingleThreadExecutor().execute(() -> {
+                database.userDao().deleteUser(new User(2, "abdo", "khaled"));
+            });
         });
 
         buttonShow.setOnClickListener(v -> {
-            List<User> userList = database.userDao().getUser();
+            Executors.newSingleThreadExecutor().execute(() -> {
+                List<User> userList = database.userDao().getUser();
 
-            StringBuilder s = new StringBuilder();
-            for (User user : userList) {
-                s.append(user.getId()).append("\t").append(user.getFirstName()).append("\t").append(user.getLastName()).append("\n");
-            }
-            textView.setText(s.toString());
-
+                StringBuilder s = new StringBuilder();
+                for (User user : userList) {
+                    s.append(user.getId()).append("\t").append(user.getFirstName()).append("\t").append(user.getLastName()).append("\n");
+                }
+                runOnUiThread(() -> {
+                    textView.setText(s.toString());
+                });
+            });
         });
     }
 }
